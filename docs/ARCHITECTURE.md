@@ -34,7 +34,7 @@ The final repository should be a TypeScript-first monorepo with a Tauri desktop 
 Deckdown/
   apps/
     desktop/              Tauri desktop app
-    web/                  Browser preview app used for docs and hosted demos
+    web/                  React/Vite frontend bundled into the desktop client
   packages/
     parser/               .dd parser, AST, diagnostics
     compiler/             utility class extraction and CSS generation
@@ -162,7 +162,7 @@ Rules:
 The renderer must work in:
 
 - Tauri WebView.
-- Browser preview app.
+- Desktop client frontend.
 - Headless Chromium export page.
 
 ## Desktop App

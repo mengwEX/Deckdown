@@ -2,10 +2,10 @@
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Deckdown",
   "version": "0.1.0",
-  "identifier": "dev.deckdown.app",
+  "identifier": "dev.deckdown.client",
   "build": {
     "beforeDevCommand": "pnpm --filter @deckdown/web dev",
-    "beforeBuildCommand": "pnpm --filter @deckdown/web build",
+    "beforeBuildCommand": "pnpm -w build",
     "devUrl": "http://localhost:5173",
     "frontendDist": "../../web/dist"
   },
@@ -26,6 +26,12 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "icon": []
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
   }
 }

@@ -7,7 +7,7 @@
   "description": "AI-first single-file presentation format and renderer.",
   "scripts": {
     "build": "pnpm -r --filter './packages/*' build && pnpm --filter @deckdown/web build",
-    "check": "pnpm -r --filter './packages/*' build && pnpm -r --filter './packages/*' check && pnpm --filter @deckdown/web check",
+    "check": "pnpm -r --filter './packages/*' build && pnpm -r --filter './packages/*' check && pnpm --filter @deckdown/web check && pnpm --filter @deckdown/desktop check",
     "dev:web": "pnpm --filter @deckdown/web dev",
     "deckdown": "pnpm --filter @deckdown/cli deckdown",
     "validate": "pnpm --filter @deckdown/cli deckdown validate packages/examples/decks/chordedit.dd"

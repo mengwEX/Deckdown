@@ -8,6 +8,7 @@ packages/*/dist/
 
 # Tauri/Rust outputs
 apps/desktop/src-tauri/target/
+apps/desktop/src-tauri/gen/
 
 # Logs and local env
 *.log

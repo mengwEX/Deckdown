@@ -42,12 +42,5 @@ jobs:
       - name: Validate canonical deck
         run: pnpm validate
 
-      - name: Render HTML smoke artifact
+      - name: Render HTML export smoke
         run: pnpm --filter @deckdown/cli deckdown render packages/examples/decks/chordedit.dd --out dist/ci/chordedit.html
-
-      - name: Upload rendered HTML artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: chordedit-html
-          path: dist/ci/chordedit.html
-          if-no-files-found: error

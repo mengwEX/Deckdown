@@ -12,21 +12,20 @@ Steps:
 
 - Install dependencies with pnpm.
 - Typecheck every shared package and the web app.
-- Build shared packages and the web app.
+- Build shared packages and the desktop frontend.
 - Validate the canonical example deck.
-- Render a standalone HTML smoke artifact.
-- Upload the rendered HTML artifact.
+- Render a standalone HTML export smoke file.
+- Typecheck the Tauri desktop shell.
 
-## CD
+## Desktop Client Build
 
-Workflow: `.github/workflows/deploy-pages.yml`
+Workflow: `.github/workflows/desktop.yml`
 
-Runs on pushes to `main` and manual dispatch.
+Runs on version tags such as `v0.1.0` and manual dispatch.
 
 Steps:
 
-- Build the `@deckdown/web` app.
-- Upload `apps/web/dist` as a GitHub Pages artifact.
-- Deploy to GitHub Pages.
+- Build the Tauri desktop client on macOS, Windows, and Linux.
+- Upload native bundle artifacts from `apps/desktop/src-tauri/target/release/bundle`.
 
-The repository must have GitHub Pages enabled with GitHub Actions as the source.
+`apps/web` is the desktop client frontend. Deckdown does not deploy a hosted web preview as a product surface.
