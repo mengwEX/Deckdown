@@ -1,0 +1,31 @@
+{
+  "name": "@deckdown/workspace",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.12.1",
+  "description": "AI-first single-file presentation format and renderer.",
+  "scripts": {
+    "build": "pnpm -r --filter './packages/*' build && pnpm --filter @deckdown/web build",
+    "check": "pnpm -r --filter './packages/*' build && pnpm -r --filter './packages/*' check && pnpm --filter @deckdown/web check",
+    "dev:web": "pnpm --filter @deckdown/web dev",
+    "deckdown": "pnpm --filter @deckdown/cli deckdown",
+    "validate": "pnpm --filter @deckdown/cli deckdown validate packages/examples/decks/chordedit.dd"
+  },
+  "keywords": [
+    "deckdown",
+    "slides",
+    "presentation",
+    "ai",
+    "tailwind"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.8.0",
+    "vite": "^7.0.0"
+  }
+}

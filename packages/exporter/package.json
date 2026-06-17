@@ -1,0 +1,25 @@
+{
+  "name": "@deckdown/exporter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@deckdown/compiler": "workspace:*",
+    "@deckdown/renderer": "workspace:*",
+    "@deckdown/schema": "workspace:*",
+    "playwright": "^1.54.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.0"
+  }
+}
