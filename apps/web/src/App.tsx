@@ -1,8 +1,20 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, Download, FileCheck2, FolderOpen, Maximize2, Play, SkipBack, SkipForward } from "lucide-react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import {
+  AlertTriangle,
+  Download,
+  FileCode2,
+  FilePlus2,
+  FolderOpen,
+  Maximize2,
+  Play,
+  Save,
+  SkipBack,
+  SkipForward,
+  X
+} from "lucide-react";
 import { compileDeckStyles } from "@deckdown/compiler";
 import { parseDeckdown } from "@deckdown/parser";
-import { addSlideRootClass, sanitizeSlideHtml } from "@deckdown/renderer";
+import { addSlideRootClass, createStandaloneHtml, sanitizeSlideHtml } from "@deckdown/renderer";
 import { Diagnostic, hasErrors } from "@deckdown/schema";
 import { sampleDeck } from "./sample";
 
@@ -11,11 +23,18 @@ export function App() {
   const [css, setCss] = useState("");
   const [slideIndex, setSlideIndex] = useState(0);
   const [scale, setScale] = useState(1);
+  const [presenting, setPresenting] = useState(false);
+  const [presenterScale, setPresenterScale] = useState(1);
   const stageRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<HTMLTextAreaElement>(null);
+  const highlightRef = useRef<HTMLPreElement>(null);
+  const presenterViewportRef = useRef<HTMLDivElement>(null);
+  const presenterStageRef = useRef<HTMLDivElement>(null);
 
   const deck = useMemo(() => parseDeckdown(source), [source]);
   const currentSlide = deck.slides[Math.min(slideIndex, Math.max(deck.slides.length - 1, 0))];
+  const highlightedSource = useMemo(() => highlightDeckSource(source), [source]);
 
   useEffect(() => {
     let cancelled = false;
@@ -48,8 +67,64 @@ export function App() {
     return () => removeEventListener("resize", resize);
   }, [deck.frontmatter.size.height, deck.frontmatter.size.width, currentSlide]);
 
+  useEffect(() => {
+    const resizePresenter = () => {
+      const viewport = presenterViewportRef.current;
+      const stage = presenterStageRef.current;
+      if (!viewport || !stage) return;
+      const rect = viewport.getBoundingClientRect();
+      const nextScale = Math.min(rect.width / deck.frontmatter.size.width, rect.height / deck.frontmatter.size.height);
+      setPresenterScale(nextScale);
+      stage.style.transform = `scale(${nextScale})`;
+      stage.style.width = `${deck.frontmatter.size.width}px`;
+      stage.style.height = `${deck.frontmatter.size.height}px`;
+    };
+    resizePresenter();
+    addEventListener("resize", resizePresenter);
+    return () => removeEventListener("resize", resizePresenter);
+  }, [deck.frontmatter.size.height, deck.frontmatter.size.width, presenting, currentSlide]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && presenting) {
+        setPresenting(false);
+        if (document.fullscreenElement) void document.exitFullscreen();
+        return;
+      }
+      if (!presenting && ["ArrowLeft", "ArrowRight", "PageUp", "PageDown"].includes(event.key)) return;
+      if (event.key === "ArrowRight" || event.key === "PageDown" || event.key === " ") {
+        event.preventDefault();
+        setSlideIndex((index) => Math.min(index + 1, deck.slides.length - 1));
+      }
+      if (event.key === "ArrowLeft" || event.key === "PageUp") {
+        event.preventDefault();
+        setSlideIndex((index) => Math.max(index - 1, 0));
+      }
+    };
+    addEventListener("keydown", onKeyDown);
+    return () => removeEventListener("keydown", onKeyDown);
+  }, [deck.slides.length, presenting]);
+
   const diagnostics = deck.diagnostics;
   const invalid = hasErrors(diagnostics);
+  const renderedSlide = currentSlide ? addSlideRootClass(sanitizeSlideHtml(currentSlide.html)) : "";
+
+  const syncEditorScroll = () => {
+    if (!editorRef.current || !highlightRef.current) return;
+    highlightRef.current.scrollTop = editorRef.current.scrollTop;
+    highlightRef.current.scrollLeft = editorRef.current.scrollLeft;
+  };
+
+  const enterPresenter = async (fullscreen: boolean) => {
+    setPresenting(true);
+    if (fullscreen) {
+      try {
+        await document.documentElement.requestFullscreen();
+      } catch {
+        // Fullscreen may be blocked by the host WebView. The presenter overlay still works.
+      }
+    }
+  };
 
   return (
     <div className="app">
@@ -62,21 +137,7 @@ export function App() {
             <small>{deck.frontmatter.engine}</small>
           </div>
         </div>
-        <div className="actions">
-          <label className="toolButton">
-            <FolderOpen size={16} />
-            <span>Open</span>
-            <input type="file" accept=".dd,text/plain" onChange={(event) => openFile(event, setSource)} />
-          </label>
-          <button className="toolButton" onClick={() => downloadSource(source, deck.frontmatter.title)}>
-            <Download size={16} />
-            <span>Save</span>
-          </button>
-          <button className="toolButton" onClick={() => downloadHtml(deck.frontmatter.title)}>
-            <Play size={16} />
-            <span>HTML</span>
-          </button>
-        </div>
+        <DeckSummary title={deck.frontmatter.title} size={`${deck.frontmatter.size.width}x${deck.frontmatter.size.height}`} />
         <nav className="slides" aria-label="Slides">
           {deck.slides.map((slide, index) => (
             <button
@@ -97,11 +158,33 @@ export function App() {
           <div className="titleBlock">
             <strong>{deck.frontmatter.title}</strong>
             <span className={invalid ? "bad" : "good"}>
-              {invalid ? <AlertTriangle size={15} /> : <FileCheck2 size={15} />}
+              {invalid ? <AlertTriangle size={15} /> : <FileCode2 size={15} />}
               {invalid ? "Invalid" : "Valid"}
             </span>
           </div>
+          <div className="fileTools">
+            <button className="textButton" onClick={() => setSource(sampleDeck)}>
+              <FilePlus2 size={16} />
+              New
+            </button>
+            <label className="textButton">
+              <FolderOpen size={16} />
+              Open
+              <input type="file" accept=".dd,text/plain" onChange={(event) => openFile(event, setSource)} />
+            </label>
+            <button className="textButton" onClick={() => downloadSource(source, deck.frontmatter.title)}>
+              <Save size={16} />
+              Save .dd
+            </button>
+            <button className="textButton" onClick={() => downloadHtml(deck, css)}>
+              <Download size={16} />
+              Export HTML
+            </button>
+          </div>
           <div className="navTools">
+            <button onClick={() => enterPresenter(false)} aria-label="Play slideshow" title="Play slideshow">
+              <Play size={18} />
+            </button>
             <button onClick={() => setSlideIndex(Math.max(slideIndex - 1, 0))} aria-label="Previous slide">
               <SkipBack size={18} />
             </button>
@@ -111,7 +194,7 @@ export function App() {
             <button onClick={() => setSlideIndex(Math.min(slideIndex + 1, deck.slides.length - 1))} aria-label="Next slide">
               <SkipForward size={18} />
             </button>
-            <button onClick={() => viewportRef.current?.requestFullscreen()} aria-label="Fullscreen">
+            <button onClick={() => enterPresenter(true)} aria-label="Fullscreen slideshow" title="Fullscreen slideshow">
               <Maximize2 size={18} />
             </button>
           </div>
@@ -119,7 +202,16 @@ export function App() {
 
         <section className="workArea">
           <div className="editorPane">
-            <textarea value={source} spellCheck={false} onChange={(event) => setSource(event.target.value)} />
+            <pre ref={highlightRef} className="sourceHighlight" aria-hidden="true">
+              {highlightedSource}
+            </pre>
+            <textarea
+              ref={editorRef}
+              value={source}
+              spellCheck={false}
+              onScroll={syncEditorScroll}
+              onChange={(event) => setSource(event.target.value)}
+            />
           </div>
           <div className="previewPane" ref={viewportRef}>
             <div
@@ -131,7 +223,7 @@ export function App() {
             >
               <div className="stage" ref={stageRef}>
                 {currentSlide ? (
-                  <div dangerouslySetInnerHTML={{ __html: addSlideRootClass(sanitizeSlideHtml(currentSlide.html)) }} />
+                  <div dangerouslySetInnerHTML={{ __html: renderedSlide }} />
                 ) : (
                   <div className="empty">No slides</div>
                 )}
@@ -140,7 +232,59 @@ export function App() {
           </div>
         </section>
       </main>
+      {presenting ? (
+        <div className="presenter">
+          <div className="presenterBar">
+            <strong>{deck.frontmatter.title}</strong>
+            <span>
+              {deck.slides.length ? slideIndex + 1 : 0} / {deck.slides.length}
+            </span>
+            <button
+              onClick={() => {
+                setPresenting(false);
+                if (document.fullscreenElement) void document.exitFullscreen();
+              }}
+              aria-label="Close presenter"
+            >
+              <X size={20} />
+            </button>
+          </div>
+          <div className="presenterViewport" ref={presenterViewportRef}>
+            <div
+              className="presenterFrame"
+              style={{
+                width: deck.frontmatter.size.width * presenterScale,
+                height: deck.frontmatter.size.height * presenterScale
+              }}
+            >
+              <div className="presenterStage" ref={presenterStageRef}>
+                {currentSlide ? <div dangerouslySetInnerHTML={{ __html: renderedSlide }} /> : <div className="empty">No slides</div>}
+              </div>
+            </div>
+          </div>
+          <div className="presenterControls">
+            <button onClick={() => setSlideIndex(Math.max(slideIndex - 1, 0))}>
+              <SkipBack size={18} />
+              Previous
+            </button>
+            <button onClick={() => setSlideIndex(Math.min(slideIndex + 1, deck.slides.length - 1))}>
+              Next
+              <SkipForward size={18} />
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
+  );
+}
+
+function DeckSummary({ title, size }: { title: string; size: string }) {
+  return (
+    <section className="deckSummary">
+      <span>Deck</span>
+      <strong>{title}</strong>
+      <small>{size}</small>
+    </section>
   );
 }
 
@@ -175,9 +319,9 @@ function downloadSource(source: string, title: string) {
   downloadBlob(new Blob([source], { type: "text/plain;charset=utf-8" }), `${slug(title)}.dd`);
 }
 
-function downloadHtml(title: string) {
-  const html = document.documentElement.outerHTML;
-  downloadBlob(new Blob([html], { type: "text/html;charset=utf-8" }), `${slug(title)}.html`);
+function downloadHtml(deck: ReturnType<typeof parseDeckdown>, css: string) {
+  const html = createStandaloneHtml(deck, css, { includeNavigation: true });
+  downloadBlob(new Blob([html], { type: "text/html;charset=utf-8" }), `${slug(deck.frontmatter.title)}.html`);
 }
 
 function downloadBlob(blob: Blob, filename: string) {
@@ -193,4 +337,71 @@ function downloadBlob(blob: Blob, filename: string) {
 
 function slug(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "deck";
+}
+
+function highlightDeckSource(source: string) {
+  const lines = source.split("\n");
+  let inFrontmatter = false;
+  return lines.flatMap((line, index) => {
+    const parts: React.ReactNode[] = [];
+    const key = `line-${index}`;
+    if (line.trim() === "---") {
+      inFrontmatter = !inFrontmatter;
+      parts.push(
+        <span key={`${key}-yaml-boundary`} className="tokYamlBoundary">
+          {line}
+        </span>
+      );
+    } else if (inFrontmatter) {
+      const match = line.match(/^(\s*[\w-]+)(:\s*)(.*)$/);
+      if (match) {
+        parts.push(
+          <span key={`${key}-yaml-key`} className="tokYamlKey">
+            {match[1]}
+          </span>,
+          <span key={`${key}-yaml-colon`} className="tokMuted">
+            {match[2]}
+          </span>,
+          <span key={`${key}-yaml-value`} className="tokYamlValue">
+            {match[3]}
+          </span>
+        );
+      } else {
+        parts.push(escapeAsText(line, key));
+      }
+    } else if (/^:::slide\b/.test(line) || line.trim() === ":::") {
+      parts.push(
+        <span key={`${key}-block`} className="tokBlock">
+          {line}
+        </span>
+      );
+    } else {
+      parts.push(...highlightHtmlLine(line, key));
+    }
+    return [...parts, "\n"];
+  });
+}
+
+function highlightHtmlLine(line: string, key: string) {
+  const nodes: ReactNode[] = [];
+  const pattern = /(<\/?[\w-]+|\/?>|\bclass=)(?=(?:(?:[^"]*"){2})*[^"]*$)|"[^"]*"|'[^']*'/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(line))) {
+    if (match.index > lastIndex) nodes.push(escapeAsText(line.slice(lastIndex, match.index), `${key}-${lastIndex}`));
+    const value = match[0];
+    const className = value.startsWith("<") || value === ">" || value === "/>" ? "tokTag" : value === "class=" ? "tokAttr" : "tokString";
+    nodes.push(
+      <span key={`${key}-${match.index}`} className={className}>
+        {value}
+      </span>
+    );
+    lastIndex = match.index + value.length;
+  }
+  if (lastIndex < line.length) nodes.push(escapeAsText(line.slice(lastIndex), `${key}-${lastIndex}`));
+  return nodes;
+}
+
+function escapeAsText(value: string, key: string) {
+  return <span key={key}>{value}</span>;
 }
