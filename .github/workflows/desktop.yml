@@ -11,29 +11,22 @@ permissions:
 
 jobs:
   build:
-    name: Build ${{ matrix.platform }}
-    runs-on: ${{ matrix.platform }}
+    name: Build ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
       matrix:
-        platform:
-          - macos-latest
-          - windows-latest
-          - ubuntu-24.04
+        include:
+          - name: macOS
+            runner: macos-latest
+            artifact: deckdown-macos
+          - name: Windows
+            runner: windows-latest
+            artifact: deckdown-windows
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Install Linux system dependencies
-        if: matrix.platform == 'ubuntu-24.04'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libwebkit2gtk-4.1-dev \
-            libayatana-appindicator3-dev \
-            librsvg2-dev \
-            patchelf
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -58,7 +51,7 @@ jobs:
       - name: Upload desktop artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: deckdown-${{ matrix.platform }}
+          name: ${{ matrix.artifact }}
           path: |
             apps/desktop/src-tauri/target/release/bundle/**/*
           if-no-files-found: error

@@ -22,6 +22,11 @@ Reasons:
 
 Framework: Tauri 2
 
+Official desktop targets:
+
+- macOS
+- Windows
+
 Dependencies:
 
 - `@tauri-apps/api`

@@ -12,7 +12,7 @@ This repository contains the production monorepo implementation:
 
 - Shared parser, compiler, renderer, exporter, schema, and CLI packages.
 - React/Vite web app.
-- Tauri desktop app scaffold.
+- Tauri desktop client for macOS and Windows.
 - Canonical example decks.
 - GitHub Actions CI/CD workflows.
 
@@ -29,7 +29,7 @@ This repository contains the production monorepo implementation:
 
 The project is a TypeScript-first pnpm monorepo with:
 
-- Tauri 2 desktop app.
+- Tauri 2 desktop app targeting macOS and Windows.
 - React + Vite frontend.
 - Monaco editor.
 - Shared parser, compiler, renderer, exporter, CLI, and schema packages.

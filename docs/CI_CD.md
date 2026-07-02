@@ -25,7 +25,8 @@ Runs on version tags such as `v0.1.0` and manual dispatch.
 
 Steps:
 
-- Build the Tauri desktop client on macOS, Windows, and Linux.
+- Build the Tauri desktop client on macOS and Windows.
 - Upload native bundle artifacts from `apps/desktop/src-tauri/target/release/bundle`.
+- Artifact names are `deckdown-macos` and `deckdown-windows`.
 
 `apps/web` is the desktop client frontend. Deckdown does not deploy a hosted web preview as a product surface.
