@@ -93,6 +93,12 @@ See [docs/FORMAT.md](./docs/FORMAT.md) for the full V0.1 format rules.
 
 The Deckdown skill lives in [skills/deckdown](./skills/deckdown). It gives agents the format rules, authoring checklist, and examples needed to generate or review `.dd` decks.
 
+## Packages And Releases
+
+The first npm-ready packages are `@deckdown/schema` and `@deckdown/renderer`. They are prepared for public scoped publishing once the `@deckdown` npm scope is available.
+
+Desktop releases are produced from version tags such as `v0.1.0-alpha.1`. The release workflow builds macOS and Windows Tauri bundles and attaches them to the GitHub Release.
+
 ## Status
 
 Deckdown is an early production monorepo. The core format, parser, renderer, compiler, exporter, CLI, web app, desktop client, canonical examples, skill, and CI/CD workflows are in place. Current work should deepen package behavior and wire the desktop shell into native file/export workflows.
