@@ -42,6 +42,7 @@ export function App() {
   const [css, setCss] = useState("");
   const [scale, setScale] = useState(1);
   const [presenting, setPresenting] = useState(false);
+  const [presenterChromeVisible, setPresenterChromeVisible] = useState(false);
   const [presenterScale, setPresenterScale] = useState(1);
   const stageRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -49,6 +50,7 @@ export function App() {
   const highlightRef = useRef<HTMLPreElement>(null);
   const presenterViewportRef = useRef<HTMLDivElement>(null);
   const presenterStageRef = useRef<HTMLDivElement>(null);
+  const presenterChromeTimerRef = useRef<number | null>(null);
 
   const activeDeck = openDecks.find((item) => item.id === activeDeckId) ?? openDecks[0];
   const source = activeDeck.source;
@@ -56,6 +58,17 @@ export function App() {
   const slideIndex = Math.min(activeDeck.slideIndex, Math.max(deck.slides.length - 1, 0));
   const currentSlide = deck.slides[Math.min(slideIndex, Math.max(deck.slides.length - 1, 0))];
   const highlightedSource = useMemo(() => highlightDeckSource(source), [source]);
+
+  const exitPresenter = () => {
+    setPresenting(false);
+    if (document.fullscreenElement) void document.exitFullscreen();
+  };
+
+  const showPresenterChrome = () => {
+    setPresenterChromeVisible(true);
+    if (presenterChromeTimerRef.current !== null) window.clearTimeout(presenterChromeTimerRef.current);
+    presenterChromeTimerRef.current = window.setTimeout(() => setPresenterChromeVisible(false), 1800);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -106,10 +119,21 @@ export function App() {
   }, [deck.frontmatter.size.height, deck.frontmatter.size.width, presenting, currentSlide]);
 
   useEffect(() => {
+    if (!presenting) {
+      setPresenterChromeVisible(false);
+      if (presenterChromeTimerRef.current !== null) window.clearTimeout(presenterChromeTimerRef.current);
+      return;
+    }
+    showPresenterChrome();
+    return () => {
+      if (presenterChromeTimerRef.current !== null) window.clearTimeout(presenterChromeTimerRef.current);
+    };
+  }, [presenting, slideIndex]);
+
+  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape" && presenting) {
-        setPresenting(false);
-        if (document.fullscreenElement) void document.exitFullscreen();
+        exitPresenter();
         return;
       }
       if (!presenting && ["ArrowLeft", "ArrowRight", "PageUp", "PageDown"].includes(event.key)) return;
@@ -376,22 +400,13 @@ export function App() {
         <Diagnostics diagnostics={diagnostics} />
       </footer>
       {presenting ? (
-        <div className="presenter">
-          <div className="presenterBar">
-            <strong>{deck.frontmatter.title}</strong>
-            <span>
-              {deck.slides.length ? slideIndex + 1 : 0} / {deck.slides.length}
-            </span>
-            <button
-              onClick={() => {
-                setPresenting(false);
-                if (document.fullscreenElement) void document.exitFullscreen();
-              }}
-              aria-label="Close presenter"
-            >
-              <X size={20} />
-            </button>
-          </div>
+        <div
+          className={`presenter ${presenterChromeVisible ? "showChrome" : ""}`}
+          aria-label="Slideshow presenter"
+          onMouseMove={showPresenterChrome}
+          onFocus={showPresenterChrome}
+          onClick={() => setActiveSlideIndex((index) => Math.min(index + 1, deck.slides.length - 1))}
+        >
           <div className="presenterViewport" ref={presenterViewportRef}>
             <div
               className="presenterFrame"
@@ -405,15 +420,30 @@ export function App() {
               </div>
             </div>
           </div>
-          <div className="presenterControls">
-            <button onClick={() => setActiveSlideIndex(Math.max(slideIndex - 1, 0))} disabled={slideIndex <= 0}>
-              <SkipBack size={18} />
-              Previous
-            </button>
-            <button onClick={() => setActiveSlideIndex(Math.min(slideIndex + 1, deck.slides.length - 1))} disabled={slideIndex >= deck.slides.length - 1}>
-              Next
-              <SkipForward size={18} />
-            </button>
+          <div className="presenterChrome" onClick={(event) => event.stopPropagation()}>
+            <div className="presenterMeta">
+              <strong>{deck.frontmatter.title}</strong>
+              <span>
+                {deck.slides.length ? slideIndex + 1 : 0} / {deck.slides.length}
+              </span>
+            </div>
+            <div className="presenterControls" aria-label="Slideshow controls">
+              <button onClick={() => setActiveSlideIndex(Math.max(slideIndex - 1, 0))} disabled={slideIndex <= 0} aria-label="Previous slide">
+                <SkipBack size={18} />
+                Previous
+              </button>
+              <button
+                onClick={() => setActiveSlideIndex(Math.min(slideIndex + 1, deck.slides.length - 1))}
+                disabled={slideIndex >= deck.slides.length - 1}
+                aria-label="Next slide"
+              >
+                Next
+                <SkipForward size={18} />
+              </button>
+              <button onClick={exitPresenter} aria-label="Close presenter">
+                <X size={20} />
+              </button>
+            </div>
           </div>
         </div>
       ) : null}
