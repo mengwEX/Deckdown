@@ -20,6 +20,7 @@ import { sampleDeck } from "./sample";
 
 export function App() {
   const [source, setSource] = useState(sampleDeck);
+  const [fileName, setFileName] = useState("chordedit.dd");
   const [css, setCss] = useState("");
   const [slideIndex, setSlideIndex] = useState(0);
   const [scale, setScale] = useState(1);
@@ -107,7 +108,7 @@ export function App() {
 
   const diagnostics = deck.diagnostics;
   const invalid = hasErrors(diagnostics);
-  const renderedSlide = currentSlide ? addSlideRootClass(sanitizeSlideHtml(currentSlide.html)) : "";
+  const renderedSlide = currentSlide ? renderSlideHtml(currentSlide.html) : "";
 
   const syncEditorScroll = () => {
     if (!editorRef.current || !highlightRef.current) return;
@@ -129,78 +130,80 @@ export function App() {
   return (
     <div className="app">
       <style>{css}</style>
-      <aside className="rail">
+      <header className="fileBar">
         <div className="brand">
           <span className="brandMark">D</span>
-          <div>
-            <strong>Deckdown</strong>
-            <small>{deck.frontmatter.engine}</small>
-          </div>
+          <strong>Deckdown</strong>
         </div>
-        <DeckSummary title={deck.frontmatter.title} size={`${deck.frontmatter.size.width}x${deck.frontmatter.size.height}`} />
-        <nav className="slides" aria-label="Slides">
-          {deck.slides.map((slide, index) => (
-            <button
-              key={slide.id}
-              className={`slideTab ${index === slideIndex ? "active" : ""}`}
-              onClick={() => setSlideIndex(index)}
-            >
-              <span>{String(index + 1).padStart(2, "0")}</span>
-              <strong>{slide.id}</strong>
-            </button>
-          ))}
-        </nav>
-        <Diagnostics diagnostics={diagnostics} />
-      </aside>
+        <div className="fileTabs" aria-label="Open files">
+          <button className="fileTab active">
+            <FileCode2 size={15} />
+            <span>{fileName}</span>
+          </button>
+        </div>
+        <span className={invalid ? "deckState bad" : "deckState good"}>
+          {invalid ? <AlertTriangle size={15} /> : <FileCode2 size={15} />}
+          {invalid ? "Invalid" : "Valid"}
+        </span>
+      </header>
 
-      <main className="main">
-        <header className="topbar">
-          <div className="titleBlock">
-            <strong>{deck.frontmatter.title}</strong>
-            <span className={invalid ? "bad" : "good"}>
-              {invalid ? <AlertTriangle size={15} /> : <FileCode2 size={15} />}
-              {invalid ? "Invalid" : "Valid"}
-            </span>
-          </div>
-          <div className="fileTools">
-            <button className="textButton" onClick={() => setSource(sampleDeck)}>
-              <FilePlus2 size={16} />
-              New
-            </button>
-            <label className="textButton">
-              <FolderOpen size={16} />
-              Open
-              <input type="file" accept=".dd,text/plain" onChange={(event) => openFile(event, setSource)} />
-            </label>
-            <button className="textButton" onClick={() => downloadSource(source, deck.frontmatter.title)}>
-              <Save size={16} />
-              Save .dd
-            </button>
-            <button className="textButton" onClick={() => downloadHtml(deck, css)}>
-              <Download size={16} />
-              Export HTML
-            </button>
-          </div>
-          <div className="navTools">
-            <button onClick={() => enterPresenter(false)} aria-label="Play slideshow" title="Play slideshow">
-              <Play size={18} />
-            </button>
-            <button onClick={() => setSlideIndex(Math.max(slideIndex - 1, 0))} aria-label="Previous slide">
-              <SkipBack size={18} />
-            </button>
-            <span>
-              {deck.slides.length ? slideIndex + 1 : 0} / {deck.slides.length}
-            </span>
-            <button onClick={() => setSlideIndex(Math.min(slideIndex + 1, deck.slides.length - 1))} aria-label="Next slide">
-              <SkipForward size={18} />
-            </button>
-            <button onClick={() => enterPresenter(true)} aria-label="Fullscreen slideshow" title="Fullscreen slideshow">
-              <Maximize2 size={18} />
-            </button>
-          </div>
-        </header>
+      <header className="topbar">
+        <div className="fileTools">
+          <button
+            className="textButton"
+            onClick={() => {
+              setSource(sampleDeck);
+              setFileName("untitled.dd");
+            }}
+          >
+            <FilePlus2 size={16} />
+            New
+          </button>
+          <label className="textButton">
+            <FolderOpen size={16} />
+            Open
+            <input type="file" accept=".dd,text/plain" onChange={(event) => openFile(event, setSource, setFileName)} />
+          </label>
+          <button className="textButton" onClick={() => downloadSource(source, deck.frontmatter.title)}>
+            <Save size={16} />
+            Save .dd
+          </button>
+          <button className="textButton" onClick={() => downloadHtml(deck, css)}>
+            <Download size={16} />
+            Export HTML
+          </button>
+        </div>
+        <div className="deckMeta">
+          <strong>{deck.frontmatter.title}</strong>
+          <span>
+            {deck.frontmatter.size.width}x{deck.frontmatter.size.height} · {deck.slides.length} slides
+          </span>
+        </div>
+        <div className="navTools">
+          <button onClick={() => enterPresenter(false)} aria-label="Play slideshow" title="Play slideshow">
+            <Play size={18} />
+          </button>
+          <button onClick={() => setSlideIndex(Math.max(slideIndex - 1, 0))} aria-label="Previous slide">
+            <SkipBack size={18} />
+          </button>
+          <span>
+            {deck.slides.length ? slideIndex + 1 : 0} / {deck.slides.length}
+          </span>
+          <button onClick={() => setSlideIndex(Math.min(slideIndex + 1, deck.slides.length - 1))} aria-label="Next slide">
+            <SkipForward size={18} />
+          </button>
+          <button onClick={() => enterPresenter(true)} aria-label="Fullscreen slideshow" title="Fullscreen slideshow">
+            <Maximize2 size={18} />
+          </button>
+        </div>
+      </header>
 
-        <section className="workArea">
+      <main className="workArea">
+        <section className="sourceColumn">
+          <div className="panelHeader">
+            <strong>Source</strong>
+            <span>.dd</span>
+          </div>
           <div className="editorPane">
             <pre ref={highlightRef} className="sourceHighlight" aria-hidden="true">
               {highlightedSource}
@@ -212,6 +215,35 @@ export function App() {
               onScroll={syncEditorScroll}
               onChange={(event) => setSource(event.target.value)}
             />
+          </div>
+        </section>
+
+        <aside className="thumbnailColumn">
+          <div className="panelHeader">
+            <strong>Slides</strong>
+            <span>{deck.slides.length}</span>
+          </div>
+          <nav className="thumbList" aria-label="Slides">
+            {deck.slides.map((slide, index) => (
+              <button
+                key={slide.id}
+                className={`thumbTab ${index === slideIndex ? "active" : ""}`}
+                onClick={() => setSlideIndex(index)}
+              >
+                <span className="thumbNumber">{String(index + 1).padStart(2, "0")}</span>
+                <div className="thumbViewport">
+                  <div className="thumbStage" dangerouslySetInnerHTML={{ __html: renderSlideHtml(slide.html) }} />
+                </div>
+                <strong>{slide.id}</strong>
+              </button>
+            ))}
+          </nav>
+        </aside>
+
+        <section className="previewColumn">
+          <div className="panelHeader">
+            <strong>Preview</strong>
+            <span>{currentSlide?.id ?? "No slide"}</span>
           </div>
           <div className="previewPane" ref={viewportRef}>
             <div
@@ -232,6 +264,10 @@ export function App() {
           </div>
         </section>
       </main>
+
+      <footer className="statusBar">
+        <Diagnostics diagnostics={diagnostics} />
+      </footer>
       {presenting ? (
         <div className="presenter">
           <div className="presenterBar">
@@ -278,16 +314,6 @@ export function App() {
   );
 }
 
-function DeckSummary({ title, size }: { title: string; size: string }) {
-  return (
-    <section className="deckSummary">
-      <span>Deck</span>
-      <strong>{title}</strong>
-      <small>{size}</small>
-    </section>
-  );
-}
-
 function Diagnostics({ diagnostics }: { diagnostics: Diagnostic[] }) {
   return (
     <section className="diagnostics">
@@ -308,10 +334,15 @@ function Diagnostics({ diagnostics }: { diagnostics: Diagnostic[] }) {
   );
 }
 
-async function openFile(event: React.ChangeEvent<HTMLInputElement>, setSource: (source: string) => void) {
+async function openFile(
+  event: React.ChangeEvent<HTMLInputElement>,
+  setSource: (source: string) => void,
+  setFileName: (name: string) => void
+) {
   const file = event.target.files?.[0];
   if (!file) return;
   setSource(await file.text());
+  setFileName(file.name);
   event.target.value = "";
 }
 
@@ -337,6 +368,10 @@ function downloadBlob(blob: Blob, filename: string) {
 
 function slug(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "deck";
+}
+
+function renderSlideHtml(html: string) {
+  return addSlideRootClass(sanitizeSlideHtml(html));
 }
 
 function highlightDeckSource(source: string) {
