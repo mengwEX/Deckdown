@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.12.1",
-  "description": "AI-first single-file presentation format and renderer.",
+  "description": "AI-first single-file presentation format, renderer, desktop app, and CLI for .dd decks.",
   "scripts": {
     "build": "pnpm -r --filter './packages/*' build && pnpm --filter @deckdown/web build",
     "check": "pnpm -r --filter './packages/*' build && pnpm -r --filter './packages/*' check && pnpm --filter @deckdown/web check && pnpm --filter @deckdown/desktop check",

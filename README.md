@@ -1,20 +1,101 @@
 # Deckdown
 
-Deckdown is an AI-first single-file presentation format and rendering application.
+Deckdown is an AI-first single-file presentation format, renderer, desktop app, and CLI for `.dd` decks.
 
-The product goal is simple:
+The product promise is simple:
 
 > AI writes one `.dd` file. Deckdown previews, validates, presents, and exports it.
 
-## Current Status
+Deckdown treats presentations as portable source files: frontmatter plus slide blocks, rendered through a deterministic HTML/CSS pipeline.
 
-This repository contains the production monorepo implementation:
+## Features
 
-- Shared parser, compiler, renderer, exporter, schema, and CLI packages.
-- React/Vite web app.
+- `.dd` format for single-file presentations.
+- Parser, schema, diagnostics, and validation pipeline.
+- Tailwind-style utility compilation through UnoCSS.
+- React/Vite editor and preview surface.
 - Tauri desktop client for macOS and Windows.
-- Canonical example decks.
-- GitHub Actions CI/CD workflows.
+- CLI for validation, inspection, rendering, and export.
+- PNG, PDF, and standalone HTML export paths.
+- Deckdown skill for authoring and reviewing `.dd` files.
+
+## Quick Start
+
+```bash
+pnpm install
+pnpm dev:web
+```
+
+Open the Vite URL to try the web editor.
+
+Validate the canonical example deck:
+
+```bash
+pnpm validate
+```
+
+Run the desktop client:
+
+```bash
+pnpm --filter @deckdown/desktop dev
+```
+
+## Commands
+
+| Command | Description |
+| --- | --- |
+| `pnpm dev:web` | Start the React/Vite web app. |
+| `pnpm --filter @deckdown/desktop dev` | Start the Tauri desktop app. |
+| `pnpm build` | Build shared packages and the web app. |
+| `pnpm check` | Run TypeScript checks across packages and apps. |
+| `pnpm validate` | Validate `packages/examples/decks/chordedit.dd`. |
+| `pnpm deckdown -- --help` | Show CLI usage after packages are built. |
+
+## Repository Structure
+
+```text
+apps/
+  desktop/              Tauri desktop shell
+  web/                  React/Vite editor and preview app
+packages/
+  cli/                  deckdown command
+  compiler/             utility class extraction and CSS generation
+  exporter/             PNG/PDF/HTML export pipeline
+  parser/               .dd parser and diagnostics
+  renderer/             slide rendering and standalone HTML
+  schema/               shared TypeScript contracts
+  examples/decks/       canonical .dd examples
+docs/                   architecture, format, roadmap, and CI notes
+skills/deckdown/        Deckdown skill, references, and examples
+```
+
+## Deck Format
+
+A `.dd` file starts with YAML frontmatter, then one or more slide blocks:
+
+```dd
+---
+title: Demo Deck
+size: 1920x1080
+ratio: 16:9
+engine: deckdown@0.1
+---
+:::slide cover
+<section class="relative w-[1920px] h-[1080px] overflow-hidden bg-neutral-950 text-white">
+  <h1 class="absolute left-24 top-24 text-7xl font-semibold">Demo Deck</h1>
+</section>
+:::
+```
+
+See [docs/FORMAT.md](./docs/FORMAT.md) for the full V0.1 format rules.
+
+## Skill
+
+The Deckdown skill lives in [skills/deckdown](./skills/deckdown). It gives agents the format rules, authoring checklist, and examples needed to generate or review `.dd` decks.
+
+## Status
+
+Deckdown is an early production monorepo. The core format, parser, renderer, compiler, exporter, CLI, web app, desktop client, canonical examples, skill, and CI/CD workflows are in place. Current work should deepen package behavior and wire the desktop shell into native file/export workflows.
 
 ## Documents
 
@@ -24,16 +105,4 @@ This repository contains the production monorepo implementation:
 - [Format](./docs/FORMAT.md)
 - [Roadmap](./docs/ROADMAP.md)
 - [Specification Index](./docs/SPEC.md)
-
-## Direction
-
-The project is a TypeScript-first pnpm monorepo with:
-
-- Tauri 2 desktop app targeting macOS and Windows.
-- React + Vite frontend.
-- Monaco editor.
-- Shared parser, compiler, renderer, exporter, CLI, and schema packages.
-- UnoCSS utility compilation.
-- Playwright-based PNG/PDF export.
-
-Production work should continue by deepening the shared packages and wiring the Tauri shell into native file/export workflows.
+- [Deckdown Skill](./skills/deckdown/SKILL.md)
