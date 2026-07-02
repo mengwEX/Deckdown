@@ -106,3 +106,7 @@ Deckdown is an early production monorepo. The core format, parser, renderer, com
 - [Roadmap](./docs/ROADMAP.md)
 - [Specification Index](./docs/SPEC.md)
 - [Deckdown Skill](./skills/deckdown/SKILL.md)
+
+## License
+
+Deckdown is released under the [MIT License](./LICENSE).
