@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { type ChangeEvent, type Dispatch, type ReactNode, type SetStateAction, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   Download,
@@ -18,11 +18,28 @@ import { addSlideRootClass, createStandaloneHtml, sanitizeSlideHtml } from "@dec
 import { Diagnostic, hasErrors } from "@deckdown/schema";
 import { sampleDeck } from "./sample";
 
+interface OpenDeck {
+  id: string;
+  fileName: string;
+  source: string;
+  dirty: boolean;
+  slideIndex: number;
+}
+
+let nextUntitledIndex = 1;
+
 export function App() {
-  const [source, setSource] = useState(sampleDeck);
-  const [fileName, setFileName] = useState("chordedit.dd");
+  const [openDecks, setOpenDecks] = useState<OpenDeck[]>([
+    {
+      id: crypto.randomUUID(),
+      fileName: "chordedit.dd",
+      source: sampleDeck,
+      dirty: false,
+      slideIndex: 0
+    }
+  ]);
+  const [activeDeckId, setActiveDeckId] = useState(openDecks[0].id);
   const [css, setCss] = useState("");
-  const [slideIndex, setSlideIndex] = useState(0);
   const [scale, setScale] = useState(1);
   const [presenting, setPresenting] = useState(false);
   const [presenterScale, setPresenterScale] = useState(1);
@@ -33,7 +50,10 @@ export function App() {
   const presenterViewportRef = useRef<HTMLDivElement>(null);
   const presenterStageRef = useRef<HTMLDivElement>(null);
 
+  const activeDeck = openDecks.find((item) => item.id === activeDeckId) ?? openDecks[0];
+  const source = activeDeck.source;
   const deck = useMemo(() => parseDeckdown(source), [source]);
+  const slideIndex = Math.min(activeDeck.slideIndex, Math.max(deck.slides.length - 1, 0));
   const currentSlide = deck.slides[Math.min(slideIndex, Math.max(deck.slides.length - 1, 0))];
   const highlightedSource = useMemo(() => highlightDeckSource(source), [source]);
 
@@ -48,8 +68,8 @@ export function App() {
   }, [deck]);
 
   useEffect(() => {
-    setSlideIndex((index) => Math.min(index, Math.max(deck.slides.length - 1, 0)));
-  }, [deck.slides.length]);
+    setActiveSlideIndex((index) => Math.min(index, Math.max(deck.slides.length - 1, 0)));
+  }, [activeDeckId, deck.slides.length]);
 
   useEffect(() => {
     const resize = () => {
@@ -95,16 +115,24 @@ export function App() {
       if (!presenting && ["ArrowLeft", "ArrowRight", "PageUp", "PageDown"].includes(event.key)) return;
       if (event.key === "ArrowRight" || event.key === "PageDown" || event.key === " ") {
         event.preventDefault();
-        setSlideIndex((index) => Math.min(index + 1, deck.slides.length - 1));
+        setActiveSlideIndex((index) => Math.min(index + 1, deck.slides.length - 1));
       }
       if (event.key === "ArrowLeft" || event.key === "PageUp") {
         event.preventDefault();
-        setSlideIndex((index) => Math.max(index - 1, 0));
+        setActiveSlideIndex((index) => Math.max(index - 1, 0));
+      }
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") {
+        event.preventDefault();
+        saveActiveDeck();
+      }
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "n") {
+        event.preventDefault();
+        createNewDeck();
       }
     };
     addEventListener("keydown", onKeyDown);
     return () => removeEventListener("keydown", onKeyDown);
-  }, [deck.slides.length, presenting]);
+  }, [activeDeckId, deck.frontmatter.title, deck.slides.length, presenting, source]);
 
   const diagnostics = deck.diagnostics;
   const invalid = hasErrors(diagnostics);
@@ -117,6 +145,7 @@ export function App() {
   };
 
   const enterPresenter = async (fullscreen: boolean) => {
+    if (deck.slides.length === 0) return;
     setPresenting(true);
     if (fullscreen) {
       try {
@@ -125,6 +154,65 @@ export function App() {
         // Fullscreen may be blocked by the host WebView. The presenter overlay still works.
       }
     }
+  };
+
+  const updateActiveDeck = (updates: Partial<OpenDeck> | ((deck: OpenDeck) => Partial<OpenDeck>)) => {
+    setOpenDecks((items) =>
+      items.map((item) => {
+        if (item.id !== activeDeckId) return item;
+        const patch = typeof updates === "function" ? updates(item) : updates;
+        return { ...item, ...patch };
+      })
+    );
+  };
+
+  const setActiveSlideIndex = (value: number | ((index: number) => number)) => {
+    updateActiveDeck((item) => ({
+      slideIndex: typeof value === "function" ? value(item.slideIndex) : value
+    }));
+  };
+
+  const createNewDeck = () => {
+    const id = crypto.randomUUID();
+    const count = nextUntitledIndex++;
+    const document = {
+      id,
+      fileName: `untitled-${count}.dd`,
+      source: createBlankDeck(count),
+      dirty: true,
+      slideIndex: 0
+    };
+    setOpenDecks((items) => [...items, document]);
+    setActiveDeckId(id);
+  };
+
+  const closeDeck = (id: string) => {
+    const target = openDecks.find((item) => item.id === id);
+    if (!target) return;
+    if (target.dirty && !confirm(`${target.fileName} has unsaved changes. Close it anyway?`)) return;
+    if (openDecks.length === 1) {
+      const next = {
+        id: crypto.randomUUID(),
+        fileName: "untitled.dd",
+        source: createBlankDeck(0),
+        dirty: false,
+        slideIndex: 0
+      };
+      setOpenDecks([next]);
+      setActiveDeckId(next.id);
+      return;
+    }
+    const index = openDecks.findIndex((item) => item.id === id);
+    const remaining = openDecks.filter((item) => item.id !== id);
+    setOpenDecks(remaining);
+    if (id === activeDeckId) {
+      setActiveDeckId(remaining[Math.max(0, index - 1)]?.id ?? remaining[0].id);
+    }
+  };
+
+  const saveActiveDeck = () => {
+    downloadSource(source, activeDeck.fileName);
+    updateActiveDeck({ dirty: false });
   };
 
   return (
@@ -136,10 +224,18 @@ export function App() {
           <strong>Deckdown</strong>
         </div>
         <div className="fileTabs" aria-label="Open files">
-          <button className="fileTab active">
-            <FileCode2 size={15} />
-            <span>{fileName}</span>
-          </button>
+          {openDecks.map((item) => (
+            <div key={item.id} className={`fileTab ${item.id === activeDeckId ? "active" : ""}`}>
+              <button className="fileTabMain" onClick={() => setActiveDeckId(item.id)}>
+                <FileCode2 size={15} />
+                <span>{item.fileName}</span>
+                {item.dirty ? <i aria-label="Unsaved changes" /> : null}
+              </button>
+              <button className="fileTabClose" onClick={() => closeDeck(item.id)} aria-label={`Close ${item.fileName}`}>
+                <X size={14} />
+              </button>
+            </div>
+          ))}
         </div>
         <span className={invalid ? "deckState bad" : "deckState good"}>
           {invalid ? <AlertTriangle size={15} /> : <FileCode2 size={15} />}
@@ -151,10 +247,7 @@ export function App() {
         <div className="fileTools">
           <button
             className="textButton"
-            onClick={() => {
-              setSource(sampleDeck);
-              setFileName("untitled.dd");
-            }}
+            onClick={createNewDeck}
           >
             <FilePlus2 size={16} />
             New
@@ -162,9 +255,9 @@ export function App() {
           <label className="textButton">
             <FolderOpen size={16} />
             Open
-            <input type="file" accept=".dd,text/plain" onChange={(event) => openFile(event, setSource, setFileName)} />
+            <input type="file" accept=".dd,text/plain" onChange={(event) => openFile(event, setOpenDecks, setActiveDeckId)} />
           </label>
-          <button className="textButton" onClick={() => downloadSource(source, deck.frontmatter.title)}>
+          <button className="textButton" onClick={saveActiveDeck}>
             <Save size={16} />
             Save .dd
           </button>
@@ -180,19 +273,32 @@ export function App() {
           </span>
         </div>
         <div className="navTools">
-          <button onClick={() => enterPresenter(false)} aria-label="Play slideshow" title="Play slideshow">
+          <button onClick={() => enterPresenter(false)} aria-label="Play slideshow" title="Play slideshow" disabled={deck.slides.length === 0}>
             <Play size={18} />
           </button>
-          <button onClick={() => setSlideIndex(Math.max(slideIndex - 1, 0))} aria-label="Previous slide">
+          <button
+            onClick={() => setActiveSlideIndex(Math.max(slideIndex - 1, 0))}
+            aria-label="Previous slide"
+            disabled={slideIndex <= 0}
+          >
             <SkipBack size={18} />
           </button>
           <span>
             {deck.slides.length ? slideIndex + 1 : 0} / {deck.slides.length}
           </span>
-          <button onClick={() => setSlideIndex(Math.min(slideIndex + 1, deck.slides.length - 1))} aria-label="Next slide">
+          <button
+            onClick={() => setActiveSlideIndex(Math.min(slideIndex + 1, deck.slides.length - 1))}
+            aria-label="Next slide"
+            disabled={slideIndex >= deck.slides.length - 1}
+          >
             <SkipForward size={18} />
           </button>
-          <button onClick={() => enterPresenter(true)} aria-label="Fullscreen slideshow" title="Fullscreen slideshow">
+          <button
+            onClick={() => enterPresenter(true)}
+            aria-label="Fullscreen slideshow"
+            title="Fullscreen slideshow"
+            disabled={deck.slides.length === 0}
+          >
             <Maximize2 size={18} />
           </button>
         </div>
@@ -213,7 +319,7 @@ export function App() {
               value={source}
               spellCheck={false}
               onScroll={syncEditorScroll}
-              onChange={(event) => setSource(event.target.value)}
+              onChange={(event) => updateActiveDeck({ source: event.target.value, dirty: true })}
             />
           </div>
         </section>
@@ -224,11 +330,12 @@ export function App() {
             <span>{deck.slides.length}</span>
           </div>
           <nav className="thumbList" aria-label="Slides">
+            {deck.slides.length === 0 ? <div className="emptyThumbs">No slides</div> : null}
             {deck.slides.map((slide, index) => (
               <button
                 key={slide.id}
                 className={`thumbTab ${index === slideIndex ? "active" : ""}`}
-                onClick={() => setSlideIndex(index)}
+                onClick={() => setActiveSlideIndex(index)}
               >
                 <span className="thumbNumber">{String(index + 1).padStart(2, "0")}</span>
                 <div className="thumbViewport">
@@ -299,11 +406,11 @@ export function App() {
             </div>
           </div>
           <div className="presenterControls">
-            <button onClick={() => setSlideIndex(Math.max(slideIndex - 1, 0))}>
+            <button onClick={() => setActiveSlideIndex(Math.max(slideIndex - 1, 0))} disabled={slideIndex <= 0}>
               <SkipBack size={18} />
               Previous
             </button>
-            <button onClick={() => setSlideIndex(Math.min(slideIndex + 1, deck.slides.length - 1))}>
+            <button onClick={() => setActiveSlideIndex(Math.min(slideIndex + 1, deck.slides.length - 1))} disabled={slideIndex >= deck.slides.length - 1}>
               Next
               <SkipForward size={18} />
             </button>
@@ -335,19 +442,31 @@ function Diagnostics({ diagnostics }: { diagnostics: Diagnostic[] }) {
 }
 
 async function openFile(
-  event: React.ChangeEvent<HTMLInputElement>,
-  setSource: (source: string) => void,
-  setFileName: (name: string) => void
+  event: ChangeEvent<HTMLInputElement>,
+  setOpenDecks: Dispatch<SetStateAction<OpenDeck[]>>,
+  setActiveDeckId: (id: string) => void
 ) {
   const file = event.target.files?.[0];
   if (!file) return;
-  setSource(await file.text());
-  setFileName(file.name);
+  const id = crypto.randomUUID();
+  setOpenDecks((items) => [
+    ...items,
+    {
+      id,
+      fileName: file.name,
+      source: awaitTextPlaceholder,
+      dirty: false,
+      slideIndex: 0
+    }
+  ]);
+  const source = await file.text();
+  setOpenDecks((items) => items.map((item) => (item.id === id ? { ...item, source } : item)));
+  setActiveDeckId(id);
   event.target.value = "";
 }
 
-function downloadSource(source: string, title: string) {
-  downloadBlob(new Blob([source], { type: "text/plain;charset=utf-8" }), `${slug(title)}.dd`);
+function downloadSource(source: string, fileName: string) {
+  downloadBlob(new Blob([source], { type: "text/plain;charset=utf-8" }), fileName.endsWith(".dd") ? fileName : `${slug(fileName)}.dd`);
 }
 
 function downloadHtml(deck: ReturnType<typeof parseDeckdown>, css: string) {
@@ -374,11 +493,40 @@ function renderSlideHtml(html: string) {
   return addSlideRootClass(sanitizeSlideHtml(html));
 }
 
+const awaitTextPlaceholder = `---
+title: Loading
+size: 1920x1080
+ratio: 16:9
+engine: deckdown@0.1
+---
+`;
+
+function createBlankDeck(index: number) {
+  const title = index ? `Untitled ${index}` : "Untitled";
+  return `---
+title: ${title}
+size: 1920x1080
+ratio: 16:9
+engine: deckdown@0.1
+---
+:::slide cover
+<section class="relative w-[1920px] h-[1080px] overflow-hidden bg-white text-neutral-950">
+  <h1 class="absolute left-24 top-20 text-7xl font-semibold tracking-tight">
+    ${title}
+  </h1>
+  <p class="absolute left-24 top-44 w-[900px] text-3xl leading-snug text-neutral-500">
+    Start writing your Deckdown slide here.
+  </p>
+</section>
+:::
+`;
+}
+
 function highlightDeckSource(source: string) {
   const lines = source.split("\n");
   let inFrontmatter = false;
   return lines.flatMap((line, index) => {
-    const parts: React.ReactNode[] = [];
+    const parts: ReactNode[] = [];
     const key = `line-${index}`;
     if (line.trim() === "---") {
       inFrontmatter = !inFrontmatter;
