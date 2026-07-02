@@ -16,6 +16,7 @@ import { compileDeckStyles } from "@deckdown/compiler";
 import { parseDeckdown } from "@deckdown/parser";
 import { addSlideRootClass, createStandaloneHtml, sanitizeSlideHtml } from "@deckdown/renderer";
 import { Diagnostic, hasErrors } from "@deckdown/schema";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { sampleDeck } from "./sample";
 
 interface OpenDeck {
@@ -27,6 +28,42 @@ interface OpenDeck {
 }
 
 let nextUntitledIndex = 1;
+
+const isTauriRuntime = () => typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
+
+async function enterSystemFullscreen() {
+  if (isTauriRuntime() && (await setTauriFullscreen(true))) return;
+  try {
+    if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
+  } catch {
+    // Browser/WebView hosts may block fullscreen. The presenter overlay still opens.
+  }
+}
+
+async function exitSystemFullscreen() {
+  await setTauriFullscreen(false);
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+  } catch {
+    // The host may already have left fullscreen.
+  }
+}
+
+async function setTauriFullscreen(fullscreen: boolean) {
+  if (!isTauriRuntime()) return false;
+  const appWindow = getCurrentWindow();
+  try {
+    await appWindow.setFullscreen(fullscreen);
+    return true;
+  } catch {
+    try {
+      await appWindow.setSimpleFullscreen(fullscreen);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
 
 export function App() {
   const [openDecks, setOpenDecks] = useState<OpenDeck[]>([
@@ -61,7 +98,7 @@ export function App() {
 
   const exitPresenter = () => {
     setPresenting(false);
-    if (document.fullscreenElement) void document.exitFullscreen();
+    void exitSystemFullscreen();
   };
 
   const showPresenterChrome = () => {
@@ -168,16 +205,10 @@ export function App() {
     highlightRef.current.scrollLeft = editorRef.current.scrollLeft;
   };
 
-  const enterPresenter = async (fullscreen: boolean) => {
+  const enterPresenter = async () => {
     if (deck.slides.length === 0) return;
     setPresenting(true);
-    if (fullscreen) {
-      try {
-        await document.documentElement.requestFullscreen();
-      } catch {
-        // Fullscreen may be blocked by the host WebView. The presenter overlay still works.
-      }
-    }
+    await enterSystemFullscreen();
   };
 
   const updateActiveDeck = (updates: Partial<OpenDeck> | ((deck: OpenDeck) => Partial<OpenDeck>)) => {
@@ -297,7 +328,7 @@ export function App() {
           </span>
         </div>
         <div className="navTools">
-          <button onClick={() => enterPresenter(false)} aria-label="Play slideshow" title="Play slideshow" disabled={deck.slides.length === 0}>
+          <button onClick={enterPresenter} aria-label="Play slideshow" title="Play slideshow" disabled={deck.slides.length === 0}>
             <Play size={18} />
           </button>
           <button
@@ -318,7 +349,7 @@ export function App() {
             <SkipForward size={18} />
           </button>
           <button
-            onClick={() => enterPresenter(true)}
+            onClick={enterPresenter}
             aria-label="Fullscreen slideshow"
             title="Fullscreen slideshow"
             disabled={deck.slides.length === 0}
