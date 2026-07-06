@@ -1,5 +1,5 @@
 {
-  "name": "@deckdown/desktop",
+  "name": "@deckdownjs/desktop",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -9,7 +9,7 @@
     "check": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@deckdown/web": "workspace:*",
+    "@deckdownjs/web": "workspace:*",
     "@tauri-apps/api": "^2.0.0"
   },
   "devDependencies": {

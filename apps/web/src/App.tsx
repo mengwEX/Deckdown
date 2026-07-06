@@ -12,10 +12,10 @@ import {
   SkipForward,
   X
 } from "lucide-react";
-import { compileDeckStyles } from "@deckdown/compiler";
-import { parseDeckdown } from "@deckdown/parser";
-import { addSlideRootClass, createStandaloneHtml, sanitizeSlideHtml } from "@deckdown/renderer";
-import { Diagnostic, hasErrors } from "@deckdown/schema";
+import { compileDeckStyles } from "@deckdownjs/compiler";
+import { parseDeckdown } from "@deckdownjs/parser";
+import { addSlideRootClass, createStandaloneHtml, sanitizeSlideHtml } from "@deckdownjs/renderer";
+import { Diagnostic, hasErrors } from "@deckdownjs/schema";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { sampleDeck } from "./sample";
 

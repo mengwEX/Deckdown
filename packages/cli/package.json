@@ -1,5 +1,5 @@
 {
-  "name": "@deckdown/cli",
+  "name": "@deckdownjs/cli",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -18,10 +18,10 @@
     "deckdown": "node dist/index.js"
   },
   "dependencies": {
-    "@deckdown/compiler": "workspace:*",
-    "@deckdown/exporter": "workspace:*",
-    "@deckdown/parser": "workspace:*",
-    "@deckdown/schema": "workspace:*",
+    "@deckdownjs/compiler": "workspace:*",
+    "@deckdownjs/exporter": "workspace:*",
+    "@deckdownjs/parser": "workspace:*",
+    "@deckdownjs/schema": "workspace:*",
     "commander": "^14.0.0",
     "picocolors": "^1.1.1"
   },

@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "identifier": "dev.deckdown.client",
   "build": {
-    "beforeDevCommand": "pnpm --filter @deckdown/web dev",
+    "beforeDevCommand": "pnpm --filter @deckdownjs/web dev",
     "beforeBuildCommand": "pnpm -w build",
     "devUrl": "http://localhost:5173",
     "frontendDist": "../../web/dist"

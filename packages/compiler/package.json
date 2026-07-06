@@ -1,5 +1,5 @@
 {
-  "name": "@deckdown/compiler",
+  "name": "@deckdownjs/compiler",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -14,7 +14,7 @@
     "check": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@deckdown/schema": "workspace:*",
+    "@deckdownjs/schema": "workspace:*",
     "@unocss/core": "^66.0.0",
     "@unocss/preset-wind3": "^66.0.0"
   },

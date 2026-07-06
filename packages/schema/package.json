@@ -1,5 +1,5 @@
 {
-  "name": "@deckdown/schema",
+  "name": "@deckdownjs/schema",
   "version": "0.1.0",
   "description": "Shared TypeScript contracts and validation helpers for Deckdown .dd decks.",
   "license": "MIT",

@@ -1,16 +1,16 @@
 {
-  "name": "@deckdown/workspace",
+  "name": "@deckdownjs/workspace",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.12.1",
   "description": "AI-first single-file presentation format, renderer, desktop app, and CLI for .dd decks.",
   "scripts": {
-    "build": "pnpm -r --filter './packages/*' build && pnpm --filter @deckdown/web build",
-    "check": "pnpm -r --filter './packages/*' build && pnpm -r --filter './packages/*' check && pnpm --filter @deckdown/web check && pnpm --filter @deckdown/desktop check",
-    "dev:web": "pnpm --filter @deckdown/web dev",
-    "deckdown": "pnpm --filter @deckdown/cli deckdown",
-    "validate": "pnpm --filter @deckdown/cli deckdown validate packages/examples/decks/chordedit.dd"
+    "build": "pnpm -r --filter './packages/*' build && pnpm --filter @deckdownjs/web build",
+    "check": "pnpm -r --filter './packages/*' build && pnpm -r --filter './packages/*' check && pnpm --filter @deckdownjs/web check && pnpm --filter @deckdownjs/desktop check",
+    "dev:web": "pnpm --filter @deckdownjs/web dev",
+    "deckdown": "pnpm --filter @deckdownjs/cli deckdown",
+    "validate": "pnpm --filter @deckdownjs/cli deckdown validate packages/examples/decks/chordedit.dd"
   },
   "keywords": [
     "deckdown",

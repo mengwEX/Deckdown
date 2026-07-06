@@ -1,5 +1,5 @@
 {
-  "name": "@deckdown/renderer",
+  "name": "@deckdownjs/renderer",
   "version": "0.1.0",
   "description": "Safe HTML rendering and standalone document helpers for Deckdown .dd decks.",
   "license": "MIT",
@@ -34,7 +34,7 @@
     "check": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@deckdown/schema": "workspace:^",
+    "@deckdownjs/schema": "workspace:^",
     "parse5": "^8.0.0"
   },
   "devDependencies": {

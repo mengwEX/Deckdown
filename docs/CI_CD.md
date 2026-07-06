@@ -36,7 +36,7 @@ Steps:
 
 The first npm-ready packages are:
 
-- `@deckdown/schema`
-- `@deckdown/renderer`
+- `@deckdownjs/schema`
+- `@deckdownjs/renderer`
 
-They are configured for public scoped publishing, but publication is manual until the `@deckdown` npm scope is available and release ownership is confirmed.
+They are configured for public scoped publishing, but publication is manual until the `@deckdownjs` npm scope is available and release ownership is confirmed.

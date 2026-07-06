@@ -1,9 +1,9 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { compileDeckStyles } from "@deckdown/compiler";
-import { createStandaloneHtml } from "@deckdown/renderer";
-import { DeckDocument } from "@deckdown/schema";
+import { compileDeckStyles } from "@deckdownjs/compiler";
+import { createStandaloneHtml } from "@deckdownjs/renderer";
+import { DeckDocument } from "@deckdownjs/schema";
 
 export interface ExportHtmlOptions {
   outFile: string;

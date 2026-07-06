@@ -10,13 +10,13 @@ Deckdown is a TypeScript-first pnpm monorepo. `apps/web` is the React/Vite edito
 
 ## Ownership Boundaries
 
-Keep shared packages independent from app code. Packages may import other `@deckdown/*` packages, but must not import from `apps/*`. The parser is the format authority. The renderer owns safe slide mounting and standalone HTML. The exporter must use the same parsed deck and compiled CSS as preview. The desktop app should wire native workflows without forking parsing, compiling, or rendering behavior.
+Keep shared packages independent from app code. Packages may import other `@deckdownjs/*` packages, but must not import from `apps/*`. The parser is the format authority. The renderer owns safe slide mounting and standalone HTML. The exporter must use the same parsed deck and compiled CSS as preview. The desktop app should wire native workflows without forking parsing, compiling, or rendering behavior.
 
 ## Commands
 
 - `pnpm install`: install workspace dependencies with pnpm 10.
 - `pnpm dev:web`: run the web app locally.
-- `pnpm --filter @deckdown/desktop dev`: run the Tauri desktop app.
+- `pnpm --filter @deckdownjs/desktop dev`: run the Tauri desktop app.
 - `pnpm check`: run TypeScript checks across packages and apps.
 - `pnpm build`: build shared packages and the web app.
 - `pnpm validate`: validate `packages/examples/decks/chordedit.dd`.
@@ -24,7 +24,7 @@ Keep shared packages independent from app code. Packages may import other `@deck
 
 ## Coding Style
 
-Use ESM TypeScript, strict types, and two-space indentation. Prefer explicit exported interfaces and focused functions with names like `DeckDocument`, `parseDeckdown`, and `compileDeckStyles`. React components use PascalCase. Hooks, helpers, variables, and file-local functions use camelCase. Use `@deckdown/<package>` workspace imports instead of relative cross-package paths.
+Use ESM TypeScript, strict types, and two-space indentation. Prefer explicit exported interfaces and focused functions with names like `DeckDocument`, `parseDeckdown`, and `compileDeckStyles`. React components use PascalCase. Hooks, helpers, variables, and file-local functions use camelCase. Use `@deckdownjs/<package>` workspace imports instead of relative cross-package paths.
 
 ## Format And Security Rules
 

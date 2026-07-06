@@ -3,10 +3,10 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { Command } from "commander";
 import pc from "picocolors";
-import { compileDeckStyles } from "@deckdown/compiler";
-import { exportHtml, exportPdf, exportPng } from "@deckdown/exporter";
-import { parseDeckdown } from "@deckdown/parser";
-import { DeckDocument, Diagnostic, hasErrors } from "@deckdown/schema";
+import { compileDeckStyles } from "@deckdownjs/compiler";
+import { exportHtml, exportPdf, exportPng } from "@deckdownjs/exporter";
+import { parseDeckdown } from "@deckdownjs/parser";
+import { DeckDocument, Diagnostic, hasErrors } from "@deckdownjs/schema";
 
 const program = new Command();
 

@@ -1,5 +1,5 @@
 {
-  "name": "@deckdown/exporter",
+  "name": "@deckdownjs/exporter",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -14,9 +14,9 @@
     "check": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@deckdown/compiler": "workspace:*",
-    "@deckdown/renderer": "workspace:*",
-    "@deckdown/schema": "workspace:*",
+    "@deckdownjs/compiler": "workspace:*",
+    "@deckdownjs/renderer": "workspace:*",
+    "@deckdownjs/schema": "workspace:*",
     "playwright": "^1.54.0"
   },
   "devDependencies": {

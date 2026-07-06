@@ -1,6 +1,6 @@
 import { createGenerator } from "@unocss/core";
 import presetWind3 from "@unocss/preset-wind3";
-import { CompileResult, DeckDocument, Diagnostic, createDiagnostic } from "@deckdown/schema";
+import { CompileResult, DeckDocument, Diagnostic, createDiagnostic } from "@deckdownjs/schema";
 
 const generatorPromise = createGenerator({
   presets: [presetWind3()],

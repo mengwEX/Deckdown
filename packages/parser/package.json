@@ -1,5 +1,5 @@
 {
-  "name": "@deckdown/parser",
+  "name": "@deckdownjs/parser",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -14,7 +14,7 @@
     "check": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@deckdown/schema": "workspace:*",
+    "@deckdownjs/schema": "workspace:*",
     "parse5": "^8.0.0",
     "yaml": "^2.0.0"
   },

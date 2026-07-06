@@ -43,4 +43,4 @@ jobs:
         run: pnpm validate
 
       - name: Render HTML export smoke
-        run: pnpm --filter @deckdown/cli deckdown render packages/examples/decks/chordedit.dd --out dist/ci/chordedit.html
+        run: pnpm --filter @deckdownjs/cli deckdown render packages/examples/decks/chordedit.dd --out dist/ci/chordedit.html

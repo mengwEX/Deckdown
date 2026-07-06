@@ -37,7 +37,7 @@ pnpm validate
 Run the desktop client:
 
 ```bash
-pnpm --filter @deckdown/desktop dev
+pnpm --filter @deckdownjs/desktop dev
 ```
 
 ## Commands
@@ -45,7 +45,7 @@ pnpm --filter @deckdown/desktop dev
 | Command | Description |
 | --- | --- |
 | `pnpm dev:web` | Start the React/Vite web app. |
-| `pnpm --filter @deckdown/desktop dev` | Start the Tauri desktop app. |
+| `pnpm --filter @deckdownjs/desktop dev` | Start the Tauri desktop app. |
 | `pnpm build` | Build shared packages and the web app. |
 | `pnpm check` | Run TypeScript checks across packages and apps. |
 | `pnpm validate` | Validate `packages/examples/decks/chordedit.dd`. |
@@ -95,7 +95,7 @@ The Deckdown skill lives in [skills/deckdown](./skills/deckdown). It gives agent
 
 ## Packages And Releases
 
-The first npm-ready packages are `@deckdown/schema` and `@deckdown/renderer`. They are prepared for public scoped publishing once the `@deckdown` npm scope is available.
+The first npm-ready packages are `@deckdownjs/schema` and `@deckdownjs/renderer`. They are prepared for public scoped publishing once the `@deckdownjs` npm scope is available.
 
 Desktop releases are produced from version tags such as `v0.1.0-alpha.1`. The release workflow builds macOS and Windows Tauri bundles and attaches them to the GitHub Release.
 

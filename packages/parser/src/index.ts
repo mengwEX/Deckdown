@@ -10,7 +10,7 @@ import {
   SourceRange,
   createDiagnostic,
   parseDeckSize
-} from "@deckdown/schema";
+} from "@deckdownjs/schema";
 
 export interface ParseDeckOptions {
   sourcePath?: string;

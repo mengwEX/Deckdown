@@ -1,5 +1,5 @@
 import * as parse5 from "parse5";
-import { DeckDocument, SlideDocument } from "@deckdown/schema";
+import { DeckDocument, SlideDocument } from "@deckdownjs/schema";
 
 export interface StandaloneHtmlOptions {
   title?: string;
